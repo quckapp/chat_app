@@ -18,7 +18,9 @@ class ApiConstants {
   static const String messageServiceBaseUrl = 'http://$_host:4006';
 
   // Auth endpoints - Phone OTP
+  static const String login = '/v1/auth/phone/request-otp';
   static const String requestOtp = '/v1/auth/phone/request-otp';
+  static const String verifyOtp = '/v1/auth/phone/login';
   static const String loginWithOtp = '/v1/auth/phone/login';
   static const String resendOtp = '/v1/auth/phone/resend-otp';
 

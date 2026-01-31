@@ -118,6 +118,10 @@ class SecureStorage {
     ]);
   }
 
+  Future<void> saveUserId(String id) async {
+    await _storage.write(key: StorageKeys.userId, value: id);
+  }
+
   Future<String?> getUserId() async {
     return await _storage.read(key: StorageKeys.userId);
   }

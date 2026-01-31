@@ -61,3 +61,47 @@ class NetworkException extends ApiException {
           statusCode: 0,
         );
 }
+
+class ValidationException extends ApiException {
+  final dynamic errors;
+
+  ValidationException({String? message, this.errors})
+      : super(
+          message: message ?? 'Validation failed.',
+          statusCode: 422,
+        );
+}
+
+class ConflictException extends ApiException {
+  ConflictException({String? message})
+      : super(
+          message: message ?? 'Resource conflict.',
+          statusCode: 409,
+        );
+}
+
+class RateLimitException extends ApiException {
+  final Duration? retryAfter;
+
+  RateLimitException({String? message, this.retryAfter})
+      : super(
+          message: message ?? 'Too many requests. Please try again later.',
+          statusCode: 429,
+        );
+}
+
+class ServerException extends ApiException {
+  ServerException({String? message})
+      : super(
+          message: message ?? 'Server error. Please try again later.',
+          statusCode: 500,
+        );
+}
+
+class TimeoutException extends ApiException {
+  TimeoutException({String? message})
+      : super(
+          message: message ?? 'Request timed out. Please try again.',
+          statusCode: 408,
+        );
+}

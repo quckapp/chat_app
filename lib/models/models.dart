@@ -1,3 +1,4 @@
+// Domain models
 export 'user.dart';
 export 'auth_response.dart';
 export 'permission.dart';
@@ -7,3 +8,6 @@ export 'participant.dart';
 export 'attachment.dart';
 export 'reaction.dart';
 export 'presence.dart';
+
+// Serializable DTOs
+export 'serializable/serializable.dart';
