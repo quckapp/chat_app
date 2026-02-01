@@ -1,18 +1,25 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../models/conversation.dart';
 import '../../models/message.dart';
+import '../../models/participant.dart';
+import '../../repositories/conversation_repository.dart';
 import '../../services/chat_service.dart';
 import 'chat_event.dart';
 import 'chat_state.dart';
 
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatService _chatService;
+  final ConversationRepository _conversationRepository;
   final Map<String, StreamSubscription<Message>> _messageSubscriptions = {};
   final Map<String, StreamSubscription<Map<String, dynamic>>> _eventSubscriptions = {};
 
-  ChatBloc({required ChatService chatService})
-      : _chatService = chatService,
+  ChatBloc({
+    required ChatService chatService,
+    ConversationRepository? conversationRepository,
+  })  : _chatService = chatService,
+        _conversationRepository = conversationRepository ?? ConversationRepository(),
         super(const ChatState()) {
     on<ChatLoadConversations>(_onLoadConversations);
     on<ChatJoinConversation>(_onJoinConversation);
@@ -36,18 +43,57 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(state.copyWith(status: ChatStatus.loading, error: null));
 
     try {
-      // TODO: Fetch conversations from API
-      // For now, using mock data
-      await Future.delayed(const Duration(milliseconds: 500));
+      debugPrint('ChatBloc: Loading conversations from API...');
+      final result = await _conversationRepository.getConversations();
+      debugPrint('ChatBloc: Got ${result.conversations.length} conversations');
+
+      // Convert DTOs to domain models
+      final conversations = result.conversations.map((dto) {
+        return Conversation(
+          id: dto.id,
+          type: dto.type,
+          name: dto.name,
+          description: dto.description,
+          avatar: dto.avatar,
+          participants: dto.participants?.map((p) {
+            return Participant(
+              id: p.userId ?? '',
+              displayName: p.name,
+              avatar: p.avatar,
+              role: ParticipantRole.fromString(p.role),
+              joinedAt: p.joinedAt ?? DateTime.now(),
+            );
+          }).toList() ?? [],
+          lastMessage: dto.lastMessage != null
+              ? Message(
+                  id: dto.lastMessage!.id,
+                  conversationId: dto.id,
+                  senderId: dto.lastMessage!.senderId,
+                  type: dto.lastMessage!.type,
+                  content: dto.lastMessage!.content,
+                  createdAt: dto.lastMessage!.createdAt,
+                )
+              : null,
+          unreadCount: dto.unreadCount,
+          isMuted: dto.isMuted,
+          isPinned: dto.isPinned,
+          createdAt: dto.createdAt ?? DateTime.now(),
+          updatedAt: dto.updatedAt,
+        );
+      }).toList();
+
+      debugPrint('ChatBloc: Converted ${conversations.length} conversations');
+
       emit(state.copyWith(
         status: ChatStatus.loaded,
-        conversations: [],
+        conversations: conversations,
       ));
-    } catch (e) {
+    } catch (e, stackTrace) {
       debugPrint('ChatBloc: Failed to load conversations: $e');
+      debugPrint('ChatBloc: Stack trace: $stackTrace');
       emit(state.copyWith(
         status: ChatStatus.error,
-        error: 'Failed to load conversations',
+        error: 'Failed to load conversations: $e',
       ));
     }
   }

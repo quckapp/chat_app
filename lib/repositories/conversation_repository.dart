@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../core/constants/api_constants.dart';
 import '../core/network/rest_client.dart';
 import '../models/serializable/conversation_dto.dart';
@@ -8,7 +9,7 @@ class ConversationRepository {
   final RestClient _client;
 
   ConversationRepository({RestClient? client})
-      : _client = client ?? RestClient(baseUrl: ApiConstants.messageServiceBaseUrl);
+      : _client = client ?? RestClient(baseUrl: ApiConstants.gatewayBaseUrl);
 
   /// Get all conversations for current user
   Future<ConversationListDto> getConversations({
@@ -16,22 +17,35 @@ class ConversationRepository {
     String? cursor,
     bool? includeArchived,
   }) async {
-    return _client.get(
-      '/conversations',
-      queryParams: {
-        if (limit != null) 'limit': limit,
-        if (cursor != null) 'cursor': cursor,
-        if (includeArchived != null) 'includeArchived': includeArchived,
-      },
-      fromJson: ConversationListDto.fromJson,
-    );
+    debugPrint('ConversationRepository: Fetching conversations from ${ApiConstants.gatewayBaseUrl}/conversations');
+    try {
+      final result = await _client.get(
+        '/conversations',
+        queryParams: {
+          if (limit != null) 'limit': limit,
+          if (cursor != null) 'cursor': cursor,
+          if (includeArchived != null) 'includeArchived': includeArchived,
+        },
+        fromJson: ConversationListDto.fromJson,
+      );
+      debugPrint('ConversationRepository: Got ${result.conversations.length} conversations');
+      return result;
+    } catch (e, stackTrace) {
+      debugPrint('ConversationRepository: Error fetching conversations: $e');
+      debugPrint('ConversationRepository: Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 
   /// Get a single conversation by ID
   Future<ConversationDto> getConversation(String id) async {
     return _client.get(
       '/conversations/$id',
-      fromJson: ConversationDto.fromJson,
+      fromJson: (json) {
+        // Handle wrapped ServiceResponseDto format
+        final data = json['data'] ?? json;
+        return ConversationDto.fromJson(data as Map<String, dynamic>);
+      },
     );
   }
 
@@ -47,9 +61,13 @@ class ConversationRepository {
   /// Create or get direct conversation with user
   Future<ConversationDto> getOrCreateDirect(String userId) async {
     return _client.post(
-      '/conversations/direct',
-      data: {'userId': userId},
-      fromJson: ConversationDto.fromJson,
+      '/conversations/direct/$userId',
+      data: {},
+      fromJson: (json) {
+        // Handle wrapped ServiceResponseDto format
+        final data = json['data'] ?? json;
+        return ConversationDto.fromJson(data as Map<String, dynamic>);
+      },
     );
   }
 

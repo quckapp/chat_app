@@ -8,11 +8,11 @@ part of 'conversation_dto.dart';
 
 ConversationDto _$ConversationDtoFromJson(Map<String, dynamic> json) =>
     ConversationDto(
-      id: json['_id'] as String,
-      type: json['type'] as String? ?? 'single',
+      id: _readId(json, '_id') as String,
+      type: json['type'] as String? ?? 'direct',
       name: json['name'] as String?,
       description: json['description'] as String?,
-      avatar: json['avatar'] as String?,
+      avatar: json['avatarUrl'] as String?,
       participants: (json['participants'] as List<dynamic>?)
           ?.map((e) => ParticipantDto.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -36,7 +36,7 @@ Map<String, dynamic> _$ConversationDtoToJson(ConversationDto instance) =>
       'type': instance.type,
       'name': instance.name,
       'description': instance.description,
-      'avatar': instance.avatar,
+      'avatarUrl': instance.avatar,
       'participants': instance.participants,
       'lastMessage': instance.lastMessage,
       'unreadCount': instance.unreadCount,
@@ -49,8 +49,8 @@ Map<String, dynamic> _$ConversationDtoToJson(ConversationDto instance) =>
 ParticipantDto _$ParticipantDtoFromJson(Map<String, dynamic> json) =>
     ParticipantDto(
       userId: json['userId'] as String?,
-      name: json['name'] as String?,
-      avatar: json['avatar'] as String?,
+      name: json['displayName'] as String?,
+      avatar: json['avatarUrl'] as String?,
       role: json['role'] as String? ?? 'member',
       joinedAt: json['joinedAt'] == null
           ? null
@@ -63,8 +63,8 @@ ParticipantDto _$ParticipantDtoFromJson(Map<String, dynamic> json) =>
 Map<String, dynamic> _$ParticipantDtoToJson(ParticipantDto instance) =>
     <String, dynamic>{
       'userId': instance.userId,
-      'name': instance.name,
-      'avatar': instance.avatar,
+      'displayName': instance.name,
+      'avatarUrl': instance.avatar,
       'role': instance.role,
       'joinedAt': instance.joinedAt?.toIso8601String(),
       'unreadCount': instance.unreadCount,
@@ -90,25 +90,6 @@ Map<String, dynamic> _$CreateConversationDtoToJson(
       'name': instance.name,
       'description': instance.description,
       'participantIds': instance.participantIds,
-    };
-
-ConversationListDto _$ConversationListDtoFromJson(Map<String, dynamic> json) =>
-    ConversationListDto(
-      conversations: (json['conversations'] as List<dynamic>)
-          .map((e) => ConversationDto.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      total: (json['total'] as num).toInt(),
-      nextCursor: json['nextCursor'] as String?,
-      hasMore: json['hasMore'] as bool? ?? false,
-    );
-
-Map<String, dynamic> _$ConversationListDtoToJson(
-        ConversationListDto instance) =>
-    <String, dynamic>{
-      'conversations': instance.conversations,
-      'total': instance.total,
-      'nextCursor': instance.nextCursor,
-      'hasMore': instance.hasMore,
     };
 
 UpdateConversationDto _$UpdateConversationDtoFromJson(

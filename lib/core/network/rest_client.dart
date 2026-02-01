@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../constants/api_constants.dart';
 import '../exceptions/api_exception.dart';
 import '../storage/secure_storage.dart';
@@ -46,8 +47,13 @@ class RestClient {
     RequestInterceptorHandler handler,
   ) async {
     final token = await _storage.getAccessToken();
+    debugPrint('RestClient: Request to ${options.uri}');
+    debugPrint('RestClient: Token present: ${token != null}');
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
+      debugPrint('RestClient: Added Authorization header');
+    } else {
+      debugPrint('RestClient: WARNING - No token available!');
     }
     handler.next(options);
   }
@@ -63,16 +69,22 @@ class RestClient {
     DioException error,
     ErrorInterceptorHandler handler,
   ) async {
+    debugPrint('RestClient: Error ${error.response?.statusCode} for ${error.requestOptions.uri}');
+    debugPrint('RestClient: Error data: ${error.response?.data}');
     if (error.response?.statusCode == 401) {
+      debugPrint('RestClient: Got 401, attempting token refresh...');
       try {
         final token = await _refreshTokenWithQueue();
         if (token != null) {
+          debugPrint('RestClient: Token refreshed successfully, retrying request');
           error.requestOptions.headers['Authorization'] = 'Bearer $token';
           final response = await _dio.fetch(error.requestOptions);
           return handler.resolve(response);
+        } else {
+          debugPrint('RestClient: Token refresh returned null');
         }
-      } catch (_) {
-        // Token refresh failed, continue with error
+      } catch (e) {
+        debugPrint('RestClient: Token refresh failed: $e');
       }
     }
     handler.next(error);

@@ -3,13 +3,19 @@ import 'message_dto.dart';
 
 part 'conversation_dto.g.dart';
 
+// Helper to read id from either '_id' or 'id' field
+Object? _readId(Map<dynamic, dynamic> json, String key) {
+  return json['_id'] ?? json['id'];
+}
+
 @JsonSerializable()
 class ConversationDto {
-  @JsonKey(name: '_id')
+  @JsonKey(name: '_id', readValue: _readId)
   final String id;
   final String type;
   final String? name;
   final String? description;
+  @JsonKey(name: 'avatarUrl')
   final String? avatar;
   final List<ParticipantDto>? participants;
   final MessageDto? lastMessage;
@@ -24,7 +30,7 @@ class ConversationDto {
 
   const ConversationDto({
     required this.id,
-    this.type = 'single',
+    this.type = 'direct',
     this.name,
     this.description,
     this.avatar,
@@ -45,7 +51,9 @@ class ConversationDto {
 @JsonSerializable()
 class ParticipantDto {
   final String? userId;
+  @JsonKey(name: 'displayName')
   final String? name;
+  @JsonKey(name: 'avatarUrl')
   final String? avatar;
   @JsonKey(defaultValue: 'member')
   final String role;
@@ -95,7 +103,8 @@ class CreateConversationDto {
   Map<String, dynamic> toJson() => _$CreateConversationDtoToJson(this);
 }
 
-@JsonSerializable()
+/// Backend returns ServiceResponseDto<PaginatedResponseDto<ConversationDto>>
+/// This class handles unwrapping the response
 class ConversationListDto {
   final List<ConversationDto> conversations;
   final int total;
@@ -109,9 +118,29 @@ class ConversationListDto {
     this.hasMore = false,
   });
 
-  factory ConversationListDto.fromJson(Map<String, dynamic> json) =>
-      _$ConversationListDtoFromJson(json);
-  Map<String, dynamic> toJson() => _$ConversationListDtoToJson(this);
+  factory ConversationListDto.fromJson(Map<String, dynamic> json) {
+    // Handle wrapped ServiceResponseDto format
+    final data = json['data'] ?? json;
+
+    // Handle PaginatedResponseDto format (uses 'items')
+    final items = data['items'] ?? data['conversations'] ?? [];
+
+    return ConversationListDto(
+      conversations: (items as List<dynamic>)
+          .map((e) => ConversationDto.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      total: (data['total'] as num?)?.toInt() ?? 0,
+      nextCursor: data['nextCursor'] as String?,
+      hasMore: data['hasMore'] as bool? ?? data['hasNext'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'conversations': conversations.map((c) => c.toJson()).toList(),
+    'total': total,
+    'nextCursor': nextCursor,
+    'hasMore': hasMore,
+  };
 }
 
 @JsonSerializable()
