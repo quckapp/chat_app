@@ -5,6 +5,7 @@ part 'conversation_dto.g.dart';
 
 @JsonSerializable()
 class ConversationDto {
+  @JsonKey(name: '_id')
   final String id;
   final String type;
   final String? name;
@@ -12,15 +13,18 @@ class ConversationDto {
   final String? avatar;
   final List<ParticipantDto>? participants;
   final MessageDto? lastMessage;
+  @JsonKey(defaultValue: 0)
   final int unreadCount;
+  @JsonKey(defaultValue: false)
   final bool isMuted;
+  @JsonKey(defaultValue: false)
   final bool isPinned;
-  final DateTime createdAt;
+  final DateTime? createdAt;
   final DateTime? updatedAt;
 
   const ConversationDto({
     required this.id,
-    this.type = 'direct',
+    this.type = 'single',
     this.name,
     this.description,
     this.avatar,
@@ -29,7 +33,7 @@ class ConversationDto {
     this.unreadCount = 0,
     this.isMuted = false,
     this.isPinned = false,
-    required this.createdAt,
+    this.createdAt,
     this.updatedAt,
   });
 
@@ -40,19 +44,32 @@ class ConversationDto {
 
 @JsonSerializable()
 class ParticipantDto {
-  final String id;
-  final String name;
+  final String? userId;
+  final String? name;
   final String? avatar;
+  @JsonKey(defaultValue: 'member')
   final String role;
   final DateTime? joinedAt;
+  @JsonKey(defaultValue: 0)
+  final int unreadCount;
+  @JsonKey(defaultValue: false)
+  final bool isMuted;
+  @JsonKey(defaultValue: false)
+  final bool isPinned;
 
   const ParticipantDto({
-    required this.id,
-    required this.name,
+    this.userId,
+    this.name,
     this.avatar,
     this.role = 'member',
     this.joinedAt,
+    this.unreadCount = 0,
+    this.isMuted = false,
+    this.isPinned = false,
   });
+
+  // Getter for backward compatibility
+  String get id => userId ?? '';
 
   factory ParticipantDto.fromJson(Map<String, dynamic> json) =>
       _$ParticipantDtoFromJson(json);

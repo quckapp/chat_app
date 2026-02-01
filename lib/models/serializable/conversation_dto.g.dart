@@ -8,8 +8,8 @@ part of 'conversation_dto.dart';
 
 ConversationDto _$ConversationDtoFromJson(Map<String, dynamic> json) =>
     ConversationDto(
-      id: json['id'] as String,
-      type: json['type'] as String? ?? 'direct',
+      id: json['_id'] as String,
+      type: json['type'] as String? ?? 'single',
       name: json['name'] as String?,
       description: json['description'] as String?,
       avatar: json['avatar'] as String?,
@@ -22,7 +22,9 @@ ConversationDto _$ConversationDtoFromJson(Map<String, dynamic> json) =>
       unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
       isMuted: json['isMuted'] as bool? ?? false,
       isPinned: json['isPinned'] as bool? ?? false,
-      createdAt: DateTime.parse(json['createdAt'] as String),
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
       updatedAt: json['updatedAt'] == null
           ? null
           : DateTime.parse(json['updatedAt'] as String),
@@ -30,7 +32,7 @@ ConversationDto _$ConversationDtoFromJson(Map<String, dynamic> json) =>
 
 Map<String, dynamic> _$ConversationDtoToJson(ConversationDto instance) =>
     <String, dynamic>{
-      'id': instance.id,
+      '_id': instance.id,
       'type': instance.type,
       'name': instance.name,
       'description': instance.description,
@@ -40,28 +42,34 @@ Map<String, dynamic> _$ConversationDtoToJson(ConversationDto instance) =>
       'unreadCount': instance.unreadCount,
       'isMuted': instance.isMuted,
       'isPinned': instance.isPinned,
-      'createdAt': instance.createdAt.toIso8601String(),
+      'createdAt': instance.createdAt?.toIso8601String(),
       'updatedAt': instance.updatedAt?.toIso8601String(),
     };
 
 ParticipantDto _$ParticipantDtoFromJson(Map<String, dynamic> json) =>
     ParticipantDto(
-      id: json['id'] as String,
-      name: json['name'] as String,
+      userId: json['userId'] as String?,
+      name: json['name'] as String?,
       avatar: json['avatar'] as String?,
       role: json['role'] as String? ?? 'member',
       joinedAt: json['joinedAt'] == null
           ? null
           : DateTime.parse(json['joinedAt'] as String),
+      unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
+      isMuted: json['isMuted'] as bool? ?? false,
+      isPinned: json['isPinned'] as bool? ?? false,
     );
 
 Map<String, dynamic> _$ParticipantDtoToJson(ParticipantDto instance) =>
     <String, dynamic>{
-      'id': instance.id,
+      'userId': instance.userId,
       'name': instance.name,
       'avatar': instance.avatar,
       'role': instance.role,
       'joinedAt': instance.joinedAt?.toIso8601String(),
+      'unreadCount': instance.unreadCount,
+      'isMuted': instance.isMuted,
+      'isPinned': instance.isPinned,
     };
 
 CreateConversationDto _$CreateConversationDtoFromJson(
