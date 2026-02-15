@@ -1,9 +1,16 @@
 import 'package:equatable/equatable.dart';
+import 'package:hive/hive.dart';
+
+part 'reaction.g.dart';
 
 /// Represents a reaction to a message
+@HiveType(typeId: 4)
 class Reaction extends Equatable {
+  @HiveField(0)
   final String emoji;
+  @HiveField(1)
   final List<String> userIds;
+  @HiveField(2)
   final int count;
 
   const Reaction({

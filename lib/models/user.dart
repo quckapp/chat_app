@@ -1,17 +1,33 @@
 import 'package:equatable/equatable.dart';
+import 'package:hive/hive.dart';
 
+part 'user.g.dart';
+
+@HiveType(typeId: 5)
 class User extends Equatable {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String phoneNumber;
+  @HiveField(2)
   final String? email;
+  @HiveField(3)
   final String? username;
+  @HiveField(4)
   final String? firstName;
+  @HiveField(5)
   final String? lastName;
+  @HiveField(6)
   final String? displayName;
+  @HiveField(7)
   final String? avatar;
+  @HiveField(8)
   final bool phoneVerified;
+  @HiveField(9)
   final bool isNewUser;
+  @HiveField(10)
   final DateTime? createdAt;
+  @HiveField(11)
   final UserStatus status;
 
   const User({
@@ -40,11 +56,27 @@ class User extends Equatable {
     if (firstName != null && lastName != null) {
       return '${firstName![0]}${lastName![0]}'.toUpperCase();
     }
-    if (firstName != null) {
+    if (firstName != null && firstName!.isNotEmpty) {
       return firstName![0].toUpperCase();
     }
-    // Use last 2 digits of phone number
-    return phoneNumber.substring(phoneNumber.length - 2);
+    // Try displayName
+    if (displayName != null && displayName!.isNotEmpty) {
+      final parts = displayName!.trim().split(' ');
+      if (parts.length >= 2 && parts[0].isNotEmpty && parts[1].isNotEmpty) {
+        return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+      }
+      return displayName![0].toUpperCase();
+    }
+    // Try username
+    if (username != null && username!.isNotEmpty) {
+      return username![0].toUpperCase();
+    }
+    // Use last 2 digits of phone number if available
+    if (phoneNumber.length >= 2) {
+      return phoneNumber.substring(phoneNumber.length - 2);
+    }
+    // Fallback
+    return '??';
   }
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -150,9 +182,13 @@ class User extends Equatable {
       ];
 }
 
+@HiveType(typeId: 7)
 enum UserStatus {
+  @HiveField(0)
   online,
+  @HiveField(1)
   offline,
+  @HiveField(2)
   away;
 
   static UserStatus fromString(String? value) {

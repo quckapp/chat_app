@@ -1,50 +1,25 @@
-import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart' show kIsWeb;
-
 class ApiConstants {
   ApiConstants._();
 
-  // Your computer's local network IP (for physical devices)
-  // Find it with: ipconfig (Windows) or ifconfig (Mac/Linux)
-  // Use 192.168.29.198 if phone is on same Wi-Fi network
-  // Use 192.168.32.1 if phone is connected via mobile hotspot
-  static const String localNetworkIp = '192.168.29.198';
+  // Change this to your computer's IP if using physical device
+  // For Android emulator: 10.0.2.2
+  // For physical device: your computer's IP (e.g., 192.168.29.198)
+  // For web browser: localhost
+  static const String _host = '127.0.0.1';
 
-  // Set to true if running on physical device
-  static const bool usePhysicalDevice = true;
+  // Kong API Gateway — single entry point for all services
+  static const int _kongPort = 8080;
+  static const String kongBaseUrl = 'http://$_host:$_kongPort';
 
-  // Get the appropriate host based on platform
-  static String get host {
-    if (kIsWeb) {
-      return 'localhost';
-    }
+  // Base URLs — all routed through Kong
+  static const String authServiceBaseUrl = 'http://$_host:$_kongPort/api/auth';
+  static const String userServiceBaseUrl = 'http://$_host:$_kongPort';
+  static const String permissionServiceBaseUrl = 'http://$_host:$_kongPort';
+  static const String gatewayBaseUrl = 'http://$_host:$_kongPort';
 
-    try {
-      if (Platform.isAndroid) {
-        // Android emulator uses 10.0.2.2 to reach host machine
-        return usePhysicalDevice ? localNetworkIp : '10.0.2.2';
-      } else if (Platform.isIOS) {
-        // iOS simulator can use localhost
-        return usePhysicalDevice ? localNetworkIp : 'localhost';
-      }
-    } catch (_) {
-      // Platform not available (web fallback)
-    }
-
-    return 'localhost';
-  }
-
-  // Base URLs (dynamic based on platform)
-  static String get authServiceBaseUrl => 'http://$host:8081/api/auth';
-  // Physical devices use proxy port (18082) since Spring runs on localhost
-  static String get userServiceBaseUrl => 'http://$host:${usePhysicalDevice ? 18082 : 8082}';
-  static String get permissionServiceBaseUrl => 'http://$host:8083';
-  static String get gatewayBaseUrl => 'http://$host:3003/api/v1';
-
-  // Elixir Services
-  // Physical devices use proxy ports (14003) since Docker WSL2 ports aren't directly accessible
-  static String get realtimeServiceWsUrl => 'ws://$host:${usePhysicalDevice ? 14003 : 4003}/socket/websocket';
-  static String get messageServiceBaseUrl => 'http://$host:4006';
+  // Elixir Services — routed through Kong
+  static const String realtimeServiceWsUrl = 'ws://$_host:$_kongPort/socket/websocket';
+  static const String messageServiceBaseUrl = 'http://$_host:$_kongPort';
 
   // Auth endpoints - Phone OTP
   static const String login = '/v1/auth/phone/request-otp';

@@ -64,6 +64,11 @@ class ParticipantDto {
   final bool isMuted;
   @JsonKey(defaultValue: false)
   final bool isPinned;
+  /// Phone number with country code (e.g., +91-9876543219)
+  final String? phoneNumber;
+  /// Alternative field names from API
+  @JsonKey(name: 'phone')
+  final String? phone;
 
   const ParticipantDto({
     this.userId,
@@ -74,7 +79,12 @@ class ParticipantDto {
     this.unreadCount = 0,
     this.isMuted = false,
     this.isPinned = false,
+    this.phoneNumber,
+    this.phone,
   });
+
+  /// Get phone number from any available field
+  String? get effectivePhoneNumber => phoneNumber ?? phone;
 
   // Getter for backward compatibility
   String get id => userId ?? '';

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import '../core/constants/api_constants.dart';
 import '../core/network/rest_client.dart';
 import '../models/serializable/user_dto.dart';
@@ -13,7 +14,7 @@ class UserRepository {
   /// Get user by ID
   Future<UserDto> getUser(String id) async {
     return _client.get(
-      '/users/$id',
+      '/api/users/$id',
       fromJson: UserDto.fromJson,
     );
   }
@@ -21,7 +22,7 @@ class UserRepository {
   /// Get multiple users by IDs
   Future<List<UserDto>> getUsers(List<String> ids) async {
     return _client.getList(
-      '/users',
+      '/api/users/v1',
       queryParams: {'ids': ids.join(',')},
       fromJson: UserDto.fromJson,
       dataKey: 'users',
@@ -31,25 +32,32 @@ class UserRepository {
   /// Search users
   Future<UserSearchResultDto> searchUsers(
     String query, {
-    int? page,
-    int? pageSize,
+    int page = 0,
+    int size = 20,
   }) async {
-    return _client.get(
-      '/users/search',
+    debugPrint('UserRepository: searchUsers called with query="$query", page=$page, size=$size');
+    debugPrint('UserRepository: baseUrl=${ApiConstants.userServiceBaseUrl}');
+    debugPrint('UserRepository: full URL=${ApiConstants.userServiceBaseUrl}/api/users/search?query=$query&page=$page&size=$size');
+
+    final result = await _client.get(
+      '/api/users/search',
       queryParams: {
-        'q': query,
-        if (page != null) 'page': page,
-        if (pageSize != null) 'pageSize': pageSize,
+        'query': query,
+        'page': page,
+        'size': size,
       },
       fromJson: UserSearchResultDto.fromJson,
     );
+
+    debugPrint('UserRepository: searchUsers returned ${result.users.length} users');
+    return result;
   }
 
   /// Get user by phone number
   Future<UserDto?> getUserByPhone(String phoneNumber) async {
     try {
       return await _client.get(
-        '/users/phone/$phoneNumber',
+        '/api/users/phone/$phoneNumber',
         fromJson: UserDto.fromJson,
       );
     } catch (_) {
@@ -61,7 +69,7 @@ class UserRepository {
   Future<UserDto?> getUserByUsername(String username) async {
     try {
       return await _client.get(
-        '/users/username/$username',
+        '/api/users/username/$username',
         fromJson: UserDto.fromJson,
       );
     } catch (_) {
@@ -72,7 +80,7 @@ class UserRepository {
   /// Update current user profile
   Future<UserDto> updateProfile(UserProfileUpdateDto profile) async {
     return _client.put(
-      '/users/me',
+      '/api/users/profile',
       data: profile.toJson(),
       fromJson: UserDto.fromJson,
     );
@@ -81,7 +89,7 @@ class UserRepository {
   /// Upload avatar
   Future<UserDto> uploadAvatar(String filePath) async {
     return _client.uploadFile(
-      '/users/me/avatar',
+      '/api/users/profile/avatar',
       filePath: filePath,
       fieldName: 'avatar',
       fromJson: UserDto.fromJson,
@@ -90,13 +98,13 @@ class UserRepository {
 
   /// Delete avatar
   Future<void> deleteAvatar() async {
-    await _client.delete('/users/me/avatar');
+    await _client.delete('/api/users/profile/avatar');
   }
 
   /// Get user contacts
   Future<List<UserDto>> getContacts() async {
     return _client.getList(
-      '/users/me/contacts',
+      '/api/users/contacts',
       fromJson: UserDto.fromJson,
       dataKey: 'contacts',
     );
@@ -105,33 +113,33 @@ class UserRepository {
   /// Add contact
   Future<void> addContact(String userId) async {
     await _client.postVoid(
-      '/users/me/contacts',
+      '/api/users/contacts',
       data: {'userId': userId},
     );
   }
 
   /// Remove contact
   Future<void> removeContact(String userId) async {
-    await _client.delete('/users/me/contacts/$userId');
+    await _client.delete('/api/users/contacts/$userId');
   }
 
   /// Block user
   Future<void> blockUser(String userId) async {
     await _client.postVoid(
-      '/users/me/blocked',
+      '/api/users/blocked',
       data: {'userId': userId},
     );
   }
 
   /// Unblock user
   Future<void> unblockUser(String userId) async {
-    await _client.delete('/users/me/blocked/$userId');
+    await _client.delete('/api/users/blocked/$userId');
   }
 
   /// Get blocked users
   Future<List<UserDto>> getBlockedUsers() async {
     return _client.getList(
-      '/users/me/blocked',
+      '/api/users/blocked',
       fromJson: UserDto.fromJson,
       dataKey: 'users',
     );
@@ -140,7 +148,7 @@ class UserRepository {
   /// Get user presence
   Future<PresenceDto> getUserPresence(String userId) async {
     return _client.get(
-      '/users/$userId/presence',
+      '/api/users/$userId/presence',
       fromJson: PresenceDto.fromJson,
     );
   }
@@ -148,7 +156,7 @@ class UserRepository {
   /// Get presence for multiple users
   Future<BulkPresenceDto> getBulkPresence(List<String> userIds) async {
     return _client.post(
-      '/users/presence/bulk',
+      '/api/users/presence/bulk',
       data: {'userIds': userIds},
       fromJson: BulkPresenceDto.fromJson,
     );
@@ -157,7 +165,7 @@ class UserRepository {
   /// Update my presence
   Future<PresenceDto> updatePresence(UpdatePresenceDto presence) async {
     return _client.put(
-      '/users/me/presence',
+      '/api/users/presence',
       data: presence.toJson(),
       fromJson: PresenceDto.fromJson,
     );

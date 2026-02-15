@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../core/storage/local_storage_service.dart';
 import '../../models/conversation.dart';
 import '../../models/message.dart';
 import '../../models/participant.dart';
@@ -12,14 +13,17 @@ import 'chat_state.dart';
 class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatService _chatService;
   final ConversationRepository _conversationRepository;
+  final LocalStorageService? _localStorageService;
   final Map<String, StreamSubscription<Message>> _messageSubscriptions = {};
   final Map<String, StreamSubscription<Map<String, dynamic>>> _eventSubscriptions = {};
 
   ChatBloc({
     required ChatService chatService,
     ConversationRepository? conversationRepository,
+    LocalStorageService? localStorageService,
   })  : _chatService = chatService,
         _conversationRepository = conversationRepository ?? ConversationRepository(),
+        _localStorageService = localStorageService,
         super(const ChatState()) {
     on<ChatLoadConversations>(_onLoadConversations);
     on<ChatJoinConversation>(_onJoinConversation);
@@ -42,6 +46,23 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   ) async {
     emit(state.copyWith(status: ChatStatus.loading, error: null));
 
+    // Step 1: Load cached conversations first (instant display)
+    if (_localStorageService != null && _localStorageService!.isInitialized) {
+      try {
+        final cachedConversations = await _localStorageService!.getConversations();
+        if (cachedConversations.isNotEmpty) {
+          debugPrint('ChatBloc: Loaded ${cachedConversations.length} cached conversations');
+          emit(state.copyWith(
+            status: ChatStatus.loaded,
+            conversations: cachedConversations,
+          ));
+        }
+      } catch (e) {
+        debugPrint('ChatBloc: Failed to load cached conversations: $e');
+      }
+    }
+
+    // Step 2: Fetch from API
     try {
       debugPrint('ChatBloc: Loading conversations from API...');
       final result = await _conversationRepository.getConversations();
@@ -49,6 +70,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
       // Convert DTOs to domain models
       final conversations = result.conversations.map((dto) {
+        // Debug: Log participant data to verify phone numbers
+        if (dto.participants != null && dto.participants!.isNotEmpty) {
+          for (final p in dto.participants!) {
+            debugPrint('ChatBloc: Participant ${p.userId} - displayName: ${p.name}, phoneNumber: ${p.phoneNumber}, phone: ${p.phone}, effective: ${p.effectivePhoneNumber}');
+          }
+        }
         return Conversation(
           id: dto.id,
           type: dto.type,
@@ -62,6 +89,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
               avatar: p.avatar,
               role: ParticipantRole.fromString(p.role),
               joinedAt: p.joinedAt ?? DateTime.now(),
+              phoneNumber: p.effectivePhoneNumber,
             );
           }).toList() ?? [],
           lastMessage: dto.lastMessage != null
@@ -84,6 +112,16 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
 
       debugPrint('ChatBloc: Converted ${conversations.length} conversations');
 
+      // Step 3: Save to local storage
+      if (_localStorageService != null && _localStorageService!.isInitialized) {
+        try {
+          await _localStorageService!.saveConversations(conversations);
+          await _localStorageService!.setLastConversationsSyncTime(DateTime.now());
+        } catch (e) {
+          debugPrint('ChatBloc: Failed to cache conversations: $e');
+        }
+      }
+
       emit(state.copyWith(
         status: ChatStatus.loaded,
         conversations: conversations,
@@ -91,10 +129,17 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     } catch (e, stackTrace) {
       debugPrint('ChatBloc: Failed to load conversations: $e');
       debugPrint('ChatBloc: Stack trace: $stackTrace');
-      emit(state.copyWith(
-        status: ChatStatus.error,
-        error: 'Failed to load conversations: $e',
-      ));
+
+      // If we have cached data, don't show error state
+      if (state.conversations.isNotEmpty) {
+        debugPrint('ChatBloc: Using cached data due to API failure');
+        emit(state.copyWith(status: ChatStatus.loaded));
+      } else {
+        emit(state.copyWith(
+          status: ChatStatus.error,
+          error: 'Failed to load conversations: $e',
+        ));
+      }
     }
   }
 
@@ -103,6 +148,19 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     Emitter<ChatState> emit,
   ) async {
     final conversationId = event.conversationId;
+
+    // Load cached messages first
+    final cachedMessages = await _loadCachedMessages(conversationId);
+    if (cachedMessages.isNotEmpty) {
+      final updatedMessages = Map<String, List<Message>>.from(state.messages);
+      updatedMessages[conversationId] = cachedMessages;
+      emit(state.copyWith(
+        messages: updatedMessages,
+        activeConversationId: conversationId,
+      ));
+      debugPrint('ChatBloc: Loaded ${cachedMessages.length} cached messages');
+    }
+
     final joined = await _chatService.joinConversation(conversationId);
 
     if (joined) {
@@ -235,17 +293,59 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
         final updatedMessages = Map<String, List<Message>>.from(state.messages);
         updatedMessages[conversationId] = messages;
         emit(state.copyWith(messages: updatedMessages));
+
+        // Persist to local storage
+        _persistMessage(conversationId, message);
         return;
       }
     }
 
     _addMessageToState(emit, conversationId, message);
 
+    // Persist to local storage
+    _persistMessage(conversationId, message);
+
     // Update unread count if not active conversation
     if (state.activeConversationId != conversationId) {
       final updatedCounts = Map<String, int>.from(state.unreadCounts);
       updatedCounts[conversationId] = (updatedCounts[conversationId] ?? 0) + 1;
       emit(state.copyWith(unreadCounts: updatedCounts));
+    }
+  }
+
+  /// Persist a message to local storage
+  Future<void> _persistMessage(String conversationId, Message message) async {
+    if (_localStorageService == null || !_localStorageService!.isInitialized) return;
+
+    try {
+      await _localStorageService!.addMessage(conversationId, message);
+    } catch (e) {
+      debugPrint('ChatBloc: Failed to persist message: $e');
+    }
+  }
+
+  /// Persist a conversation update to local storage
+  Future<void> _persistConversation(Conversation conversation) async {
+    if (_localStorageService == null || !_localStorageService!.isInitialized) return;
+
+    try {
+      await _localStorageService!.saveConversation(conversation);
+    } catch (e) {
+      debugPrint('ChatBloc: Failed to persist conversation: $e');
+    }
+  }
+
+  /// Load cached messages for a conversation
+  Future<List<Message>> _loadCachedMessages(String conversationId) async {
+    if (_localStorageService == null || !_localStorageService!.isInitialized) {
+      return [];
+    }
+
+    try {
+      return await _localStorageService!.getMessages(conversationId);
+    } catch (e) {
+      debugPrint('ChatBloc: Failed to load cached messages: $e');
+      return [];
     }
   }
 

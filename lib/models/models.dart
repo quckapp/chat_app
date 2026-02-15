@@ -8,6 +8,7 @@ export 'participant.dart';
 export 'attachment.dart';
 export 'reaction.dart';
 export 'presence.dart';
+export 'call_record.dart';
 
 // Serializable DTOs
 export 'serializable/serializable.dart';

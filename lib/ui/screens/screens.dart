@@ -6,3 +6,5 @@ export 'register_name_screen.dart';
 export 'conversations_screen.dart';
 export 'chat_screen.dart';
 export 'new_chat_screen.dart';
+export 'chat_info_screen.dart';
+export 'media_gallery_screen.dart';

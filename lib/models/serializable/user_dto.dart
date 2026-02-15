@@ -58,9 +58,32 @@ class UserProfileUpdateDto {
   Map<String, dynamic> toJson() => _$UserProfileUpdateDtoToJson(this);
 }
 
+/// User summary from search results
 @JsonSerializable()
+class UserSummaryDto {
+  final String id;
+  final String? username;
+  final String? displayName;
+  @JsonKey(name: 'avatarUrl')
+  final String? avatar;
+  final String? status;
+
+  const UserSummaryDto({
+    required this.id,
+    this.username,
+    this.displayName,
+    this.avatar,
+    this.status,
+  });
+
+  factory UserSummaryDto.fromJson(Map<String, dynamic> json) =>
+      _$UserSummaryDtoFromJson(json);
+  Map<String, dynamic> toJson() => _$UserSummaryDtoToJson(this);
+}
+
+/// Search result with pagination - wraps API response
 class UserSearchResultDto {
-  final List<UserDto> users;
+  final List<UserSummaryDto> users;
   final int total;
   final int page;
   final int pageSize;
@@ -72,7 +95,19 @@ class UserSearchResultDto {
     required this.pageSize,
   });
 
-  factory UserSearchResultDto.fromJson(Map<String, dynamic> json) =>
-      _$UserSearchResultDtoFromJson(json);
-  Map<String, dynamic> toJson() => _$UserSearchResultDtoToJson(this);
+  /// Parse from API response: { success, message, data: { content, page, size, totalElements, ... } }
+  factory UserSearchResultDto.fromJson(Map<String, dynamic> json) {
+    // Handle wrapped ApiResponse format
+    final data = json['data'] as Map<String, dynamic>? ?? json;
+    final content = data['content'] as List<dynamic>? ?? [];
+
+    return UserSearchResultDto(
+      users: content
+          .map((e) => UserSummaryDto.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      total: (data['totalElements'] as int?) ?? content.length,
+      page: (data['page'] as int?) ?? 0,
+      pageSize: (data['size'] as int?) ?? 20,
+    );
+  }
 }

@@ -1,4 +1,5 @@
 // Core exports
+export 'animation/animation.dart';
 export 'constants/api_constants.dart';
 export 'constants/storage_keys.dart';
 export 'exceptions/api_exception.dart';

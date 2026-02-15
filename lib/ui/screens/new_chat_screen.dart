@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../models/user.dart';
+import '../../repositories/conversation_repository.dart';
+import '../../repositories/user_repository.dart';
 
 /// Screen for starting a new conversation
 class NewChatScreen extends StatefulWidget {
@@ -12,21 +15,37 @@ class NewChatScreen extends StatefulWidget {
 
 class _NewChatScreenState extends State<NewChatScreen> {
   final _searchController = TextEditingController();
+  final _userRepository = UserRepository();
+  final _conversationRepository = ConversationRepository();
   List<User> _searchResults = [];
   bool _isSearching = false;
+  bool _isStartingChat = false;
   String? _error;
+  Timer? _debounce;
 
   @override
   void dispose() {
     _searchController.dispose();
+    _debounce?.cancel();
     super.dispose();
   }
 
+  void _onSearchChanged(String query) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      _searchUsers(query);
+    });
+  }
+
   Future<void> _searchUsers(String query) async {
-    if (query.isEmpty) {
+    debugPrint('NewChatScreen: _searchUsers called with query: "$query"');
+
+    if (query.isEmpty || query.length < 2) {
+      debugPrint('NewChatScreen: Query too short, clearing results');
       setState(() {
         _searchResults = [];
         _isSearching = false;
+        _error = null;
       });
       return;
     }
@@ -37,15 +56,29 @@ class _NewChatScreenState extends State<NewChatScreen> {
     });
 
     try {
-      // TODO: Implement actual user search via user service
-      // For now, show empty results
-      await Future.delayed(const Duration(milliseconds: 500));
+      debugPrint('NewChatScreen: Calling userRepository.searchUsers("$query")');
+      final result = await _userRepository.searchUsers(query);
+      debugPrint('NewChatScreen: Got ${result.users.length} users, total: ${result.total}');
+
+      for (final user in result.users) {
+        debugPrint('NewChatScreen: User found - id: ${user.id}, username: ${user.username}, displayName: ${user.displayName}');
+      }
 
       setState(() {
-        _searchResults = [];
+        _searchResults = result.users.map((dto) => User(
+          id: dto.id,
+          phoneNumber: '', // Not available in summary
+          username: dto.username,
+          displayName: dto.displayName,
+          avatar: dto.avatar,
+          status: UserStatus.fromString(dto.status),
+        )).toList();
         _isSearching = false;
       });
-    } catch (e) {
+      debugPrint('NewChatScreen: setState complete, _searchResults.length = ${_searchResults.length}');
+    } catch (e, stackTrace) {
+      debugPrint('NewChatScreen: Search error: $e');
+      debugPrint('NewChatScreen: Stack trace: $stackTrace');
       setState(() {
         _error = 'Failed to search users';
         _isSearching = false;
@@ -53,15 +86,34 @@ class _NewChatScreenState extends State<NewChatScreen> {
     }
   }
 
-  void _startConversation(User user) {
-    // TODO: Create or get existing conversation with user
-    // Then navigate to chat screen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Starting chat with ${user.fullName}')),
-    );
+  Future<void> _startConversation(User user) async {
+    if (_isStartingChat) return;
 
-    // For now, go back
-    context.pop();
+    setState(() {
+      _isStartingChat = true;
+    });
+
+    try {
+      debugPrint('NewChatScreen: Creating/getting direct conversation with user ${user.id}');
+      final conversation = await _conversationRepository.getOrCreateDirect(user.id);
+      debugPrint('NewChatScreen: Got conversation ${conversation.id}');
+
+      if (mounted) {
+        // Navigate to chat screen
+        context.go('/chat/${conversation.id}');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('NewChatScreen: Error starting conversation: $e');
+      debugPrint('NewChatScreen: Stack trace: $stackTrace');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to start chat: $e')),
+        );
+        setState(() {
+          _isStartingChat = false;
+        });
+      }
+    }
   }
 
   @override
@@ -71,7 +123,13 @@ class _NewChatScreenState extends State<NewChatScreen> {
         title: const Text('New Chat'),
         leading: IconButton(
           icon: const Icon(Icons.close),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         ),
       ),
       body: Column(
@@ -95,9 +153,7 @@ class _NewChatScreenState extends State<NewChatScreen> {
                       )
                     : null,
               ),
-              onChanged: (value) {
-                _searchUsers(value);
-              },
+              onChanged: _onSearchChanged,
             ),
           ),
 
@@ -228,7 +284,12 @@ class _NewChatScreenState extends State<NewChatScreen> {
       ),
       title: Text(user.fullName),
       subtitle: user.username != null ? Text('@${user.username}') : null,
-      onTap: () => _startConversation(user),
+      trailing: _isStartingChat ? const SizedBox(
+        width: 20,
+        height: 20,
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ) : null,
+      onTap: _isStartingChat ? null : () => _startConversation(user),
     );
   }
 }

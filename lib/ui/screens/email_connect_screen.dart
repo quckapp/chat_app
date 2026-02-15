@@ -29,7 +29,13 @@ class _EmailConnectScreenState extends State<EmailConnectScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.black87),
-          onPressed: () => context.pop(),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
         ),
       ),
       body: SafeArea(
@@ -138,7 +144,13 @@ class _EmailConnectScreenState extends State<EmailConnectScreen> {
 
                 // Skip button
                 TextButton(
-                  onPressed: () => context.pop(),
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/');
+                    }
+                  },
                   child: const Text('I\'ll do this later'),
                 ),
                 const SizedBox(height: 16),

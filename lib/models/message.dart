@@ -1,26 +1,46 @@
 import 'package:equatable/equatable.dart';
+import 'package:hive/hive.dart';
 import 'attachment.dart';
 import 'reaction.dart';
 
+part 'message.g.dart';
+
 /// Represents a chat message
+@HiveType(typeId: 1)
 class Message extends Equatable {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String conversationId;
+  @HiveField(2)
   final String senderId;
+  @HiveField(3)
   final String type;
+  @HiveField(4)
   final String content;
+  @HiveField(5)
   final List<Attachment> attachments;
+  @HiveField(6)
   final String? replyTo;
+  @HiveField(7)
   final bool isEdited;
+  @HiveField(8)
   final bool isDeleted;
+  @HiveField(9)
   final List<Reaction> reactions;
+  @HiveField(10)
   final List<String> readBy;
+  @HiveField(11)
   final DateTime createdAt;
+  @HiveField(12)
   final DateTime? updatedAt;
 
   // For optimistic UI - pending messages
+  @HiveField(13)
   final bool isPending;
+  @HiveField(14)
   final bool hasFailed;
+  @HiveField(15)
   final String? clientId;
 
   const Message({

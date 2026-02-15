@@ -58,6 +58,8 @@ ParticipantDto _$ParticipantDtoFromJson(Map<String, dynamic> json) =>
       unreadCount: (json['unreadCount'] as num?)?.toInt() ?? 0,
       isMuted: json['isMuted'] as bool? ?? false,
       isPinned: json['isPinned'] as bool? ?? false,
+      phoneNumber: json['phoneNumber'] as String?,
+      phone: json['phone'] as String?,
     );
 
 Map<String, dynamic> _$ParticipantDtoToJson(ParticipantDto instance) =>
@@ -70,6 +72,8 @@ Map<String, dynamic> _$ParticipantDtoToJson(ParticipantDto instance) =>
       'unreadCount': instance.unreadCount,
       'isMuted': instance.isMuted,
       'isPinned': instance.isPinned,
+      'phoneNumber': instance.phoneNumber,
+      'phone': instance.phone,
     };
 
 CreateConversationDto _$CreateConversationDtoFromJson(

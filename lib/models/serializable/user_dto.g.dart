@@ -58,21 +58,20 @@ Map<String, dynamic> _$UserProfileUpdateDtoToJson(
       'email': instance.email,
     };
 
-UserSearchResultDto _$UserSearchResultDtoFromJson(Map<String, dynamic> json) =>
-    UserSearchResultDto(
-      users: (json['users'] as List<dynamic>)
-          .map((e) => UserDto.fromJson(e as Map<String, dynamic>))
-          .toList(),
-      total: (json['total'] as num).toInt(),
-      page: (json['page'] as num).toInt(),
-      pageSize: (json['pageSize'] as num).toInt(),
+UserSummaryDto _$UserSummaryDtoFromJson(Map<String, dynamic> json) =>
+    UserSummaryDto(
+      id: json['id'] as String,
+      username: json['username'] as String?,
+      displayName: json['displayName'] as String?,
+      avatar: json['avatarUrl'] as String?,
+      status: json['status'] as String?,
     );
 
-Map<String, dynamic> _$UserSearchResultDtoToJson(
-        UserSearchResultDto instance) =>
+Map<String, dynamic> _$UserSummaryDtoToJson(UserSummaryDto instance) =>
     <String, dynamic>{
-      'users': instance.users,
-      'total': instance.total,
-      'page': instance.page,
-      'pageSize': instance.pageSize,
+      'id': instance.id,
+      'username': instance.username,
+      'displayName': instance.displayName,
+      'avatarUrl': instance.avatar,
+      'status': instance.status,
     };

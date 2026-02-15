@@ -1,20 +1,38 @@
 import 'package:equatable/equatable.dart';
+import 'package:hive/hive.dart';
 import 'message.dart';
 import 'participant.dart';
 
+part 'conversation.g.dart';
+
 /// Represents a chat conversation (direct or group)
+@HiveType(typeId: 0)
 class Conversation extends Equatable {
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String type;
+  @HiveField(2)
   final String? name;
+  @HiveField(3)
   final String? description;
+  @HiveField(4)
   final String? avatar;
+  @HiveField(5)
   final List<Participant> participants;
+  @HiveField(6)
   final Message? lastMessage;
+  @HiveField(7)
   final int unreadCount;
+  @HiveField(8)
   final bool isMuted;
+  @HiveField(9)
   final bool isPinned;
+  @HiveField(10)
+  final int disappearingMessagesTimer; // 0 = off, otherwise seconds
+  @HiveField(11)
   final DateTime createdAt;
+  @HiveField(12)
   final DateTime? updatedAt;
 
   const Conversation({
@@ -28,6 +46,7 @@ class Conversation extends Equatable {
     this.unreadCount = 0,
     this.isMuted = false,
     this.isPinned = false,
+    this.disappearingMessagesTimer = 0,
     required this.createdAt,
     this.updatedAt,
   });
@@ -43,19 +62,19 @@ class Conversation extends Equatable {
     }
 
     if (isDirect) {
-      // For direct chats, show the other participant's name
+      // For direct chats, show the other participant's name with flag
       final otherParticipant = getOtherParticipant(currentUserId);
       if (otherParticipant != null) {
-        return otherParticipant.name;
+        return otherParticipant.displayNameWithFlag;
       }
-      return participants.isNotEmpty ? participants.first.name : 'Unknown';
+      return participants.isNotEmpty ? participants.first.displayNameWithFlag : 'Unknown';
     }
 
-    // For group chats without a name, show participant names
+    // For group chats without a name, show participant names with flags
     final names = participants
         .where((p) => p.id != currentUserId)
         .take(3)
-        .map((p) => p.name)
+        .map((p) => p.displayNameWithFlag)
         .toList();
 
     if (names.isEmpty) return 'Empty conversation';
@@ -106,6 +125,8 @@ class Conversation extends Equatable {
       unreadCount: json['unreadCount'] as int? ?? json['unread_count'] as int? ?? 0,
       isMuted: json['isMuted'] as bool? ?? json['is_muted'] as bool? ?? false,
       isPinned: json['isPinned'] as bool? ?? json['is_pinned'] as bool? ?? false,
+      disappearingMessagesTimer: json['disappearingMessagesTimer'] as int? ??
+          json['disappearing_messages_timer'] as int? ?? 0,
       createdAt: json['createdAt'] != null
           ? DateTime.parse(json['createdAt'] as String)
           : json['created_at'] != null
@@ -131,6 +152,7 @@ class Conversation extends Equatable {
       'unreadCount': unreadCount,
       'isMuted': isMuted,
       'isPinned': isPinned,
+      'disappearingMessagesTimer': disappearingMessagesTimer,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };
@@ -147,6 +169,7 @@ class Conversation extends Equatable {
     int? unreadCount,
     bool? isMuted,
     bool? isPinned,
+    int? disappearingMessagesTimer,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -161,6 +184,7 @@ class Conversation extends Equatable {
       unreadCount: unreadCount ?? this.unreadCount,
       isMuted: isMuted ?? this.isMuted,
       isPinned: isPinned ?? this.isPinned,
+      disappearingMessagesTimer: disappearingMessagesTimer ?? this.disappearingMessagesTimer,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -178,6 +202,7 @@ class Conversation extends Equatable {
         unreadCount,
         isMuted,
         isPinned,
+        disappearingMessagesTimer,
         createdAt,
         updatedAt,
       ];

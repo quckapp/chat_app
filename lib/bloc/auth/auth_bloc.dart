@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../core/exceptions/api_exception.dart';
+import '../../core/storage/local_storage_service.dart';
 import '../../services/auth_service.dart';
 import '../../services/realtime_service.dart';
 import 'auth_event.dart';
@@ -12,12 +13,15 @@ export 'auth_state.dart';
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthService _authService;
   final RealtimeService? _realtimeService;
+  final LocalStorageService? _localStorageService;
 
   AuthBloc({
     required AuthService authService,
     RealtimeService? realtimeService,
+    LocalStorageService? localStorageService,
   })  : _authService = authService,
         _realtimeService = realtimeService,
+        _localStorageService = localStorageService,
         super(const AuthState()) {
     on<AuthCheckStatus>(_onCheckStatus);
     on<AuthRequestOtp>(_onRequestOtp);
@@ -178,6 +182,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // Disconnect from realtime service first
       _realtimeService?.disconnect();
       debugPrint('AuthBloc: Realtime service disconnected');
+
+      // Clear local storage data
+      if (_localStorageService != null && _localStorageService!.isInitialized) {
+        await _localStorageService!.clearAll();
+        debugPrint('AuthBloc: Local storage cleared');
+      }
 
       await _authService.logout();
       debugPrint('AuthBloc: AuthService logout complete');

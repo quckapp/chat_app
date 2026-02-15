@@ -22,3 +22,8 @@ export 'presence/presence_state.dart';
 export 'typing/typing_bloc.dart';
 export 'typing/typing_event.dart';
 export 'typing/typing_state.dart';
+
+// Call BLoC
+export 'call/call_bloc.dart';
+export 'call/call_event.dart';
+export 'call/call_state.dart';

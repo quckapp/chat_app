@@ -133,6 +133,22 @@ class _ChatAppState extends State<ChatApp> {
           path: '/new-chat',
           builder: (context, state) => const NewChatScreen(),
         ),
+        GoRoute(
+          path: '/chat/:id/info',
+          builder: (context, state) => ChatInfoScreen(
+            conversationId: state.pathParameters['id']!,
+          ),
+        ),
+        GoRoute(
+          path: '/chat/:id/media',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return MediaGalleryScreen(
+              conversationId: state.pathParameters['id']!,
+              conversationName: extra?['conversationName'] as String? ?? 'Chat',
+            );
+          },
+        ),
       ],
     );
   }
