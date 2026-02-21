@@ -1,0 +1,57 @@
+# Login subflow — enters phone number, submits OTP, lands on home.
+# Env vars: PHONE, OTP_DIGIT_0..5, FIRST_NAME, LAST_NAME, USERNAME
+appId: com.quckapp.chat_app
+
+- assertVisible: "Welcome"
+- tapOn: "Phone Number"
+- inputText: "${PHONE}"
+- tapOn: "Send OTP"
+- waitForAnimationToEnd
+- assertVisible: "Verify OTP"
+
+# Enter 6-digit OTP into individual fields
+- tapOn:
+    index: 0
+    id: "otp_field_0"
+- inputText: "${OTP_DIGIT_0}"
+- tapOn:
+    index: 0
+    id: "otp_field_1"
+- inputText: "${OTP_DIGIT_1}"
+- tapOn:
+    index: 0
+    id: "otp_field_2"
+- inputText: "${OTP_DIGIT_2}"
+- tapOn:
+    index: 0
+    id: "otp_field_3"
+- inputText: "${OTP_DIGIT_3}"
+- tapOn:
+    index: 0
+    id: "otp_field_4"
+- inputText: "${OTP_DIGIT_4}"
+- tapOn:
+    index: 0
+    id: "otp_field_5"
+- inputText: "${OTP_DIGIT_5}"
+
+# Wait for home screen or registration
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    visible: "Chats|Complete Your Profile"
+    timeout: 30000
+
+# Handle registration if new user
+- runFlow:
+    when:
+      visible: "Complete Your Profile"
+    commands:
+      - tapOn: "First Name"
+      - inputText: "${FIRST_NAME}"
+      - tapOn: "Last Name"
+      - inputText: "${LAST_NAME}"
+      - tapOn: "Username"
+      - inputText: "${USERNAME}"
+      - tapOn: "Continue"
+      - waitForAnimationToEnd
+      - assertVisible: "Chats"

@@ -1,0 +1,10 @@
+# Send a text message in the current chat screen.
+# Assumes user is already in a conversation.
+# Env vars: MESSAGE_TEXT
+appId: com.quckapp.chat_app
+
+- tapOn: "Message"
+- inputText: "${MESSAGE_TEXT}"
+- tapOn:
+    id: ".*send.*"
+- waitForAnimationToEnd

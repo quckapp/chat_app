@@ -1,0 +1,43 @@
+# E2E Scenario 08: Call Initiation
+# Device A: Open DM -> tap audio call button
+# Device B (WS): Receives incoming_call event on user channel
+appId: com.quckapp.chat_app
+
+env:
+  PHONE: "9999900001"
+  OTP_DIGIT_0: "1"
+  OTP_DIGIT_1: "2"
+  OTP_DIGIT_2: "3"
+  OTP_DIGIT_3: "4"
+  OTP_DIGIT_4: "5"
+  OTP_DIGIT_5: "6"
+  FIRST_NAME: "E2E"
+  LAST_NAME: "UserA"
+  USERNAME: "e2e_user_a"
+  CHAT_PARTNER_NAME: "E2E UserB"
+
+- launchApp:
+    clearState: true
+
+# Login as User A
+- runFlow: ../subflows/login.yaml
+
+# Navigate to chat with User B
+- runFlow: ../subflows/navigate_to_chat.yaml
+
+# Tap the audio call button (usually phone icon in app bar)
+- tapOn:
+    id: ".*call.*"
+- waitForAnimationToEnd
+
+# Wait for call to be initiated
+- extendedWaitUntil:
+    timeout: 10000
+
+# End call if UI shows call screen
+- tapOn:
+    id: ".*end.*call.*"
+    optional: true
+- waitForAnimationToEnd
+
+- takeScreenshot: "08_call_initiation"

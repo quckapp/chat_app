@@ -1,0 +1,53 @@
+# E2E Scenario 09: Disappearing Messages
+# Device A: Open DM -> set disappearing timer -> send message
+# Device B (WS): Receives message:new with TTL metadata
+appId: com.quckapp.chat_app
+
+env:
+  PHONE: "9999900001"
+  OTP_DIGIT_0: "1"
+  OTP_DIGIT_1: "2"
+  OTP_DIGIT_2: "3"
+  OTP_DIGIT_3: "4"
+  OTP_DIGIT_4: "5"
+  OTP_DIGIT_5: "6"
+  FIRST_NAME: "E2E"
+  LAST_NAME: "UserA"
+  USERNAME: "e2e_user_a"
+  CHAT_PARTNER_NAME: "E2E UserB"
+  MESSAGE_TEXT: "This message will disappear!"
+
+- launchApp:
+    clearState: true
+
+# Login as User A
+- runFlow: ../subflows/login.yaml
+
+# Navigate to chat with User B
+- runFlow: ../subflows/navigate_to_chat.yaml
+
+# Open chat settings/info to set disappearing messages
+- tapOn:
+    id: ".*more.*|.*menu.*"
+    optional: true
+- waitForAnimationToEnd
+
+# Look for disappearing messages setting
+- tapOn:
+    text: "Disappearing messages"
+    optional: true
+- waitForAnimationToEnd
+
+# Select a timer (e.g., 30 seconds)
+- tapOn:
+    text: "30 seconds"
+    optional: true
+- waitForAnimationToEnd
+
+# Go back to chat and send message
+- runFlow: ../subflows/send_message.yaml
+
+# Verify message sent
+- assertVisible: "This message will disappear!"
+
+- takeScreenshot: "09_disappearing_messages"

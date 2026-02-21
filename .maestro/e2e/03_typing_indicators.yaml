@@ -1,0 +1,37 @@
+# E2E Scenario 03: Typing Indicators
+# Device A: Open DM with User B -> start typing
+# Device B (WS): Receives typing:start event
+appId: com.quckapp.chat_app
+
+env:
+  PHONE: "9999900001"
+  OTP_DIGIT_0: "1"
+  OTP_DIGIT_1: "2"
+  OTP_DIGIT_2: "3"
+  OTP_DIGIT_3: "4"
+  OTP_DIGIT_4: "5"
+  OTP_DIGIT_5: "6"
+  FIRST_NAME: "E2E"
+  LAST_NAME: "UserA"
+  USERNAME: "e2e_user_a"
+  CHAT_PARTNER_NAME: "E2E UserB"
+
+- launchApp:
+    clearState: true
+
+# Login as User A
+- runFlow: ../subflows/login.yaml
+
+# Navigate to chat with User B
+- runFlow: ../subflows/navigate_to_chat.yaml
+
+# Start typing (this should trigger typing:start WS event)
+- tapOn: "Message"
+- inputText: "typing indicator test..."
+
+# Keep typing visible for WS verification
+- waitForAnimationToEnd
+- extendedWaitUntil:
+    timeout: 5000
+
+- takeScreenshot: "03_typing_indicators"

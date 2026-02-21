@@ -1,0 +1,50 @@
+# E2E Scenario 10: File Sharing
+# Device A: Open DM -> attach file document -> send
+# Device B (WS): Receives message:new with file attachment type
+appId: com.quckapp.chat_app
+
+env:
+  PHONE: "9999900001"
+  OTP_DIGIT_0: "1"
+  OTP_DIGIT_1: "2"
+  OTP_DIGIT_2: "3"
+  OTP_DIGIT_3: "4"
+  OTP_DIGIT_4: "5"
+  OTP_DIGIT_5: "6"
+  FIRST_NAME: "E2E"
+  LAST_NAME: "UserA"
+  USERNAME: "e2e_user_a"
+  CHAT_PARTNER_NAME: "E2E UserB"
+
+- launchApp:
+    clearState: true
+
+# Login as User A
+- runFlow: ../subflows/login.yaml
+
+# Navigate to chat with User B
+- runFlow: ../subflows/navigate_to_chat.yaml
+
+# Tap attachment button
+- tapOn:
+    id: ".*attach.*"
+- waitForAnimationToEnd
+
+# Select file/document option
+- tapOn: "Document"
+- waitForAnimationToEnd
+
+# Select first file from file picker
+- tapOn:
+    index: 0
+    id: ".*file.*|.*document.*"
+    optional: true
+- waitForAnimationToEnd
+
+# Confirm/send the file
+- tapOn:
+    id: ".*send.*"
+    optional: true
+- waitForAnimationToEnd
+
+- takeScreenshot: "10_file_sharing"

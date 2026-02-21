@@ -1,0 +1,53 @@
+# E2E Scenario 11: Message Reply
+# Device A: Long-press existing message -> tap Reply -> type reply -> send
+# Device B (WS): Receives message:new with reply_to field
+appId: com.quckapp.chat_app
+
+env:
+  PHONE: "9999900001"
+  OTP_DIGIT_0: "1"
+  OTP_DIGIT_1: "2"
+  OTP_DIGIT_2: "3"
+  OTP_DIGIT_3: "4"
+  OTP_DIGIT_4: "5"
+  OTP_DIGIT_5: "6"
+  FIRST_NAME: "E2E"
+  LAST_NAME: "UserA"
+  USERNAME: "e2e_user_a"
+  CHAT_PARTNER_NAME: "E2E UserB"
+  MESSAGE_TEXT: "Original message for reply test"
+
+- launchApp:
+    clearState: true
+
+# Login as User A
+- runFlow: ../subflows/login.yaml
+
+# Navigate to chat with User B
+- runFlow: ../subflows/navigate_to_chat.yaml
+
+# Send an initial message to reply to
+- runFlow: ../subflows/send_message.yaml
+
+# Verify initial message appears
+- assertVisible: "Original message for reply test"
+
+# Long-press on the message to show context menu
+- longPressOn: "Original message for reply test"
+- waitForAnimationToEnd
+
+# Tap Reply option from context menu
+- tapOn: "Reply"
+- waitForAnimationToEnd
+
+# Type the reply message
+- tapOn: "Message"
+- inputText: "This is a reply to the original!"
+- tapOn:
+    id: ".*send.*"
+- waitForAnimationToEnd
+
+# Verify reply appears
+- assertVisible: "This is a reply to the original!"
+
+- takeScreenshot: "11_message_reply"

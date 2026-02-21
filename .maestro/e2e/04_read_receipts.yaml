@@ -1,0 +1,40 @@
+# E2E Scenario 04: Read Receipts
+# Device A: Send message to User B
+# Device B (API): Marks conversation as read
+# Verification: messages_read event or API state
+appId: com.quckapp.chat_app
+
+env:
+  PHONE: "9999900001"
+  OTP_DIGIT_0: "1"
+  OTP_DIGIT_1: "2"
+  OTP_DIGIT_2: "3"
+  OTP_DIGIT_3: "4"
+  OTP_DIGIT_4: "5"
+  OTP_DIGIT_5: "6"
+  FIRST_NAME: "E2E"
+  LAST_NAME: "UserA"
+  USERNAME: "e2e_user_a"
+  CHAT_PARTNER_NAME: "E2E UserB"
+  MESSAGE_TEXT: "Read receipt test message"
+
+- launchApp:
+    clearState: true
+
+# Login as User A
+- runFlow: ../subflows/login.yaml
+
+# Navigate to chat with User B
+- runFlow: ../subflows/navigate_to_chat.yaml
+
+# Send message
+- runFlow: ../subflows/send_message.yaml
+
+# Verify message sent
+- assertVisible: "Read receipt test message"
+
+# Wait for User B to mark as read (done via API in verify.sh)
+- extendedWaitUntil:
+    timeout: 10000
+
+- takeScreenshot: "04_read_receipts"

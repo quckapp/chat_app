@@ -1,0 +1,20 @@
+# Navigate to a specific chat conversation.
+# Assumes user is on Chats tab (home screen).
+# Env vars: CHAT_PARTNER_NAME (display name of the other user)
+appId: com.quckapp.chat_app
+
+- assertVisible: "Chats"
+# Tap the FAB to start new chat
+- tapOn:
+    id: ".*FloatingActionButton.*"
+- waitForAnimationToEnd
+- assertVisible: "New Chat"
+# Search for the partner
+- tapOn: "Search users"
+- inputText: "${CHAT_PARTNER_NAME}"
+- waitForAnimationToEnd
+# Tap the first search result
+- tapOn: "${CHAT_PARTNER_NAME}"
+- waitForAnimationToEnd
+# Should now be in the chat screen
+- assertVisible: "Message"
