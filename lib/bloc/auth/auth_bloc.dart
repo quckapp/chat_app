@@ -94,10 +94,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(state.copyWith(status: AuthStatus.loading, error: null));
 
     try {
-      await _authService.requestOtp(phoneNumber: event.phoneNumber);
+      final response = await _authService.requestOtp(phoneNumber: event.phoneNumber);
       emit(AuthState(
         status: AuthStatus.otpSent,
         phoneNumber: event.phoneNumber,
+        testOtp: response.testOtp,
       ));
     } catch (e) {
       emit(AuthState(

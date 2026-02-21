@@ -171,6 +171,7 @@ class _OtpScreenState extends State<OtpScreen> {
                           focusNode: FocusNode(),
                           onKeyEvent: (event) => _onKeyPress(index, event),
                           child: TextFormField(
+                            key: Key('otp_field_$index'),
                             controller: _controllers[index],
                             focusNode: _focusNodes[index],
                             keyboardType: TextInputType.number,
@@ -208,6 +209,7 @@ class _OtpScreenState extends State<OtpScreen> {
 
                   // Verify button
                   ElevatedButton(
+                    key: const Key('otp_verify_button'),
                     onPressed: authState.isLoading ? null : _handleVerifyOtp,
                     child: authState.isLoading
                         ? const SizedBox(

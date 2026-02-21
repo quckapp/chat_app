@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# E2E test artifacts
+e2e/.tokens.json
+e2e/.result_*.json
+e2e/ws_client/node_modules/
+e2e/ws_client/package-lock.json

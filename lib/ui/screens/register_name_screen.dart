@@ -91,6 +91,7 @@ class _RegisterNameScreenState extends State<RegisterNameScreen> {
 
                     // First Name
                     TextFormField(
+                      key: const Key('register_first_name'),
                       controller: _firstNameController,
                       decoration: const InputDecoration(
                         labelText: 'First Name *',
@@ -112,6 +113,7 @@ class _RegisterNameScreenState extends State<RegisterNameScreen> {
 
                     // Last Name
                     TextFormField(
+                      key: const Key('register_last_name'),
                       controller: _lastNameController,
                       decoration: const InputDecoration(
                         labelText: 'Last Name *',
@@ -130,6 +132,7 @@ class _RegisterNameScreenState extends State<RegisterNameScreen> {
 
                     // Username
                     TextFormField(
+                      key: const Key('register_username'),
                       controller: _usernameController,
                       decoration: const InputDecoration(
                         labelText: 'Username *',
@@ -222,6 +225,7 @@ class _RegisterNameScreenState extends State<RegisterNameScreen> {
 
                     // Continue Button
                     ElevatedButton(
+                      key: const Key('register_continue_button'),
                       onPressed: _isLoading || _isOAuthLoading ? null : _saveAndContinue,
                       child: _isLoading
                           ? const SizedBox(

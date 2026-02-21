@@ -83,6 +83,11 @@ class _ChatAppState extends State<ChatApp> {
           return '/login';
         }
 
+        // Redirect to login if OTP was cancelled (on OTP screen but no OTP pending)
+        if (!isLoggedIn && !needsProfileSetup && isOtpScreen && !authState.isOtpSent) {
+          return '/login';
+        }
+
         // Redirect to login if not logged in and not on auth screens
         if (!isLoggedIn && !needsProfileSetup && !isLoggingIn && !isOtpScreen) {
           return '/login';
@@ -96,10 +101,7 @@ class _ChatAppState extends State<ChatApp> {
         return null;
       },
       routes: [
-        GoRoute(
-          path: '/',
-          builder: (context, state) => const ConversationsScreen(),
-        ),
+        // Auth routes (outside shell)
         GoRoute(
           path: '/login',
           builder: (context, state) => const LoginScreen(),
@@ -112,6 +114,62 @@ class _ChatAppState extends State<ChatApp> {
           path: '/register-name',
           builder: (context, state) => const RegisterNameScreen(),
         ),
+
+        // Main app shell with bottom navigation
+        StatefulShellRoute.indexedStack(
+          builder: (context, state, navigationShell) {
+            return AppShellScreen(navigationShell: navigationShell);
+          },
+          branches: [
+            // Branch 0: Chats
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/',
+                  builder: (context, state) => const ConversationsScreen(),
+                ),
+              ],
+            ),
+            // Branch 1: Channels
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/channels',
+                  builder: (context, state) => const ChannelListScreen(),
+                ),
+              ],
+            ),
+            // Branch 2: Search
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/search',
+                  builder: (context, state) => const SearchScreen(),
+                ),
+              ],
+            ),
+            // Branch 3: Notifications
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/notifications',
+                  builder: (context, state) => const NotificationListScreen(),
+                ),
+              ],
+            ),
+            // Branch 4: More
+            StatefulShellBranch(
+              routes: [
+                GoRoute(
+                  path: '/more',
+                  builder: (context, state) => const MoreScreen(),
+                ),
+              ],
+            ),
+          ],
+        ),
+
+        // Detail routes (pushed on top of shell)
         GoRoute(
           path: '/settings',
           builder: (context, state) => SettingsScreen(
@@ -148,6 +206,155 @@ class _ChatAppState extends State<ChatApp> {
               conversationName: extra?['conversationName'] as String? ?? 'Chat',
             );
           },
+        ),
+        // Workspace routes
+        GoRoute(
+          path: '/workspaces',
+          builder: (context, state) => const WorkspaceListScreen(),
+        ),
+        GoRoute(
+          path: '/workspaces/create',
+          builder: (context, state) => const CreateWorkspaceScreen(),
+        ),
+        GoRoute(
+          path: '/workspace/:id',
+          builder: (context, state) => WorkspaceDetailScreen(
+            workspaceId: state.pathParameters['id']!,
+          ),
+        ),
+        // Channel detail routes
+        GoRoute(
+          path: '/channels/create',
+          builder: (context, state) => const CreateChannelScreen(),
+        ),
+        GoRoute(
+          path: '/channel/:id',
+          builder: (context, state) => ChannelDetailScreen(
+            channelId: state.pathParameters['id']!,
+          ),
+        ),
+        // Thread routes
+        GoRoute(
+          path: '/threads',
+          builder: (context, state) => const ThreadListScreen(),
+        ),
+        GoRoute(
+          path: '/thread/:id',
+          builder: (context, state) => ThreadViewScreen(
+            threadId: state.pathParameters['id']!,
+          ),
+        ),
+        // File routes
+        GoRoute(
+          path: '/files',
+          builder: (context, state) => const FileBrowserScreen(),
+        ),
+        GoRoute(
+          path: '/file/:id/preview',
+          builder: (context, state) => FilePreviewScreen(
+            fileId: state.pathParameters['id']!,
+          ),
+        ),
+        // Bookmark routes
+        GoRoute(
+          path: '/bookmarks',
+          builder: (context, state) => const BookmarkListScreen(),
+        ),
+        GoRoute(
+          path: '/bookmarks/folder/:id',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return BookmarkFolderScreen(
+              folderId: state.pathParameters['id']!,
+              folderName: extra?['folderName'] as String? ?? 'Folder',
+            );
+          },
+        ),
+        // Reminder routes
+        GoRoute(
+          path: '/reminders',
+          builder: (context, state) => const ReminderListScreen(),
+        ),
+        GoRoute(
+          path: '/reminders/create',
+          builder: (context, state) {
+            final extra = state.extra as Map<String, dynamic>?;
+            return CreateReminderScreen(
+              messageId: extra?['messageId'] as String? ?? '',
+              channelId: extra?['channelId'] as String? ?? '',
+            );
+          },
+        ),
+        // Notification settings
+        GoRoute(
+          path: '/notifications/settings',
+          builder: (context, state) => const NotificationSettingsScreen(),
+        ),
+        GoRoute(
+          path: '/devices',
+          builder: (context, state) => const DeviceManagementScreen(),
+        ),
+        // Call & Huddle routes
+        GoRoute(
+          path: '/call-history',
+          builder: (context, state) => const CallHistoryScreen(),
+        ),
+        GoRoute(
+          path: '/huddle/:id',
+          builder: (context, state) => HuddleScreen(
+            channelId: state.pathParameters['id']!,
+          ),
+        ),
+        // Channel advanced feature routes
+        GoRoute(
+          path: '/channel/:id/polls',
+          builder: (context, state) => PollScreen(
+            channelId: state.pathParameters['id']!,
+          ),
+        ),
+        GoRoute(
+          path: '/channel/:id/scheduled',
+          builder: (context, state) => ScheduledMessagesScreen(
+            channelId: state.pathParameters['id']!,
+          ),
+        ),
+        GoRoute(
+          path: '/channel/:id/links',
+          builder: (context, state) => ChannelLinksScreen(
+            channelId: state.pathParameters['id']!,
+          ),
+        ),
+        GoRoute(
+          path: '/channel/:id/tabs',
+          builder: (context, state) => ChannelTabsScreen(
+            channelId: state.pathParameters['id']!,
+          ),
+        ),
+        // Admin routes
+        GoRoute(
+          path: '/admin',
+          builder: (context, state) => const AdminDashboardScreen(),
+        ),
+        GoRoute(
+          path: '/admin/users',
+          builder: (context, state) => const UserManagementScreen(),
+        ),
+        GoRoute(
+          path: '/admin/audit',
+          builder: (context, state) => const AuditLogScreen(),
+        ),
+        GoRoute(
+          path: '/admin/settings',
+          builder: (context, state) => const AdminSettingsScreen(),
+        ),
+        // Auth enhancement routes
+        GoRoute(
+          path: '/settings/2fa',
+          builder: (context, state) => const TwoFactorSetupScreen(),
+        ),
+        GoRoute(
+          path: '/settings/sessions',
+          builder: (context, state) => const SessionManagementScreen(),
         ),
       ],
     );

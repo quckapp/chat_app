@@ -149,7 +149,12 @@ class RestClient {
         queryParameters: queryParams,
         options: options,
       );
-      return fromJson(response.data!);
+      var data = response.data!;
+      // Auto-unwrap ApiResponse wrapper: {"success": ..., "data": {...}}
+      if (data.containsKey('success') && data.containsKey('data') && data['data'] is Map<String, dynamic>) {
+        data = data['data'] as Map<String, dynamic>;
+      }
+      return fromJson(data);
     } on DioException catch (e) {
       throw _handleDioError(e);
     }
@@ -170,11 +175,25 @@ class RestClient {
         options: options,
       );
 
+      // Auto-unwrap ApiResponse wrapper: {"success": ..., "data": [...]}
+      var rawData = response.data;
+      if (rawData is Map && rawData.containsKey('success') && rawData.containsKey('data')) {
+        rawData = rawData['data'];
+      }
+
       final List<dynamic> data;
-      if (dataKey != null && response.data is Map) {
-        data = response.data[dataKey] as List<dynamic>;
-      } else if (response.data is List) {
-        data = response.data as List<dynamic>;
+      if (dataKey != null && rawData is Map) {
+        data = rawData[dataKey] as List<dynamic>;
+      } else if (rawData is List) {
+        data = rawData as List<dynamic>;
+      } else if (rawData is Map) {
+        // Auto-detect common list keys in paged responses
+        final listData = rawData['items'] ?? rawData['content'] ?? rawData['data'];
+        if (listData is List) {
+          data = listData;
+        } else {
+          throw ApiException(message: 'Invalid response format');
+        }
       } else {
         throw ApiException(message: 'Invalid response format');
       }

@@ -217,6 +217,7 @@ class SettingsScreen extends StatelessWidget {
               Padding(
                 padding: AppSpacing.horizontalMd,
                 child: OutlinedButton.icon(
+                  key: const Key('settings_logout_button'),
                   onPressed: () => _confirmLogout(context),
                   icon: const Icon(Icons.logout, color: AppColors.error),
                   label: Text(

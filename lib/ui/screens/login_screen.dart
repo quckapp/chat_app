@@ -137,6 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             // Phone number input
                             Expanded(
                               child: TextFormField(
+                                key: const Key('login_phone_field'),
                                 controller: _phoneController,
                                 keyboardType: TextInputType.phone,
                                 textInputAction: TextInputAction.done,
@@ -167,6 +168,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                         // Send OTP button
                         AppButton.filled(
+                          key: const Key('login_send_otp_button'),
                           label: 'Send OTP',
                           isLoading: authState.isLoading,
                           isFullWidth: true,

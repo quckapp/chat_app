@@ -20,6 +20,7 @@ class AuthState extends Equatable {
   final String? error;
   final String? phoneNumber;
   final bool isNewUser;
+  final String? testOtp; // Only populated in dev mode for E2E tests
 
   const AuthState({
     this.status = AuthStatus.initial,
@@ -27,6 +28,7 @@ class AuthState extends Equatable {
     this.error,
     this.phoneNumber,
     this.isNewUser = false,
+    this.testOtp,
   });
 
   bool get isAuthenticated => status == AuthStatus.authenticated;
@@ -41,6 +43,7 @@ class AuthState extends Equatable {
     String? error,
     String? phoneNumber,
     bool? isNewUser,
+    String? testOtp,
   }) {
     return AuthState(
       status: status ?? this.status,
@@ -48,9 +51,10 @@ class AuthState extends Equatable {
       error: error,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       isNewUser: isNewUser ?? this.isNewUser,
+      testOtp: testOtp ?? this.testOtp,
     );
   }
 
   @override
-  List<Object?> get props => [status, user, error, phoneNumber, isNewUser];
+  List<Object?> get props => [status, user, error, phoneNumber, isNewUser, testOtp];
 }

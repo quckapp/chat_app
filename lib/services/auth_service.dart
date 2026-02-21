@@ -46,6 +46,7 @@ class AuthService {
       maskedPhone: data['maskedPhone'] as String?,
       expiresInSeconds: data['expiresInSeconds'] as int?,
       resendCooldownSeconds: data['resendCooldownSeconds'] as int?,
+      testOtp: data['testOtp'] as String?,
     );
   }
 
@@ -297,11 +298,13 @@ class OtpRequestResponse {
   final String? maskedPhone;
   final int? expiresInSeconds;
   final int? resendCooldownSeconds;
+  final String? testOtp; // Only populated by dev backend
 
   OtpRequestResponse({
     this.maskedPhone,
     this.expiresInSeconds,
     this.resendCooldownSeconds,
+    this.testOtp,
   });
 }
 

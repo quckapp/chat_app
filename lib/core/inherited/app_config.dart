@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 class AppConfig {
   final String appName;
   final String appVersion;
-  final String baseUrl;
-  final String wsUrl;
+  final String baseUrl;       // REST API via Kong
+  final String wsUrl;         // WebSocket via Envoy
+  final String livekitUrl;    // LiveKit media server for calls
   final bool isDebug;
   final int maxMessageLength;
   final int maxFileSize;
@@ -15,8 +16,9 @@ class AppConfig {
   const AppConfig({
     this.appName = 'QuickApp Chat',
     this.appVersion = '1.0.0',
-    this.baseUrl = 'http://localhost:8080',
-    this.wsUrl = 'ws://localhost:4000/socket',
+    this.baseUrl = 'http://localhost:8080',       // Kong API Gateway
+    this.wsUrl = 'ws://localhost:8090/socket',     // Envoy WebSocket proxy
+    this.livekitUrl = 'ws://localhost:7880',        // LiveKit media server
     this.isDebug = true,
     this.maxMessageLength = 4000,
     this.maxFileSize = 10 * 1024 * 1024, // 10 MB
@@ -29,6 +31,7 @@ class AppConfig {
         appName: 'QuickApp Chat',
         baseUrl: 'https://api.quickapp.com',
         wsUrl: 'wss://realtime.quickapp.com/socket',
+        livekitUrl: 'wss://livekit.quickapp.com',
         isDebug: false,
       );
 
@@ -37,6 +40,7 @@ class AppConfig {
         appName: 'QuickApp Chat (Staging)',
         baseUrl: 'https://staging-api.quickapp.com',
         wsUrl: 'wss://staging-realtime.quickapp.com/socket',
+        livekitUrl: 'wss://staging-livekit.quickapp.com',
         isDebug: true,
       );
 }
